@@ -54,15 +54,23 @@ class Face:
         self.image = None
         self.container_image = None
         self.embedding = None
+        self.accuracy = None
 
 
 class Recognition:
-    def __init__(self, opts={}):
+    def __init__(self, opts=dict):
         global facenet_model_checkpoint
         global classifier_model
+        global debug
 
-        facenet_model_checkpoint = opts['model'] or facenet_model_checkpoint
-        classifier_model = opts['classifier_filename'] or classifier_model
+        if 'model' in opts:
+            facenet_model_checkpoint = opts['model']
+
+        if 'classifier_filename' in opts:
+            classifier_model = opts['classifier_filename']
+
+        if 'debug' in opts:
+            debug = opts['debug']
 
         self.detect = Detection()
         self.encoder = Encoder()
@@ -98,6 +106,7 @@ class Identifier:
         if face.embedding is not None:
             predictions = self.model.predict_proba([face.embedding])
             best_class_indices = np.argmax(predictions, axis=1)
+            face.accuracy = np.max(predictions)
             return self.class_names[best_class_indices[0]]
 
 
