@@ -31,7 +31,7 @@ import os
 import argparse
 import tensorflow as tf
 import numpy as np
-from facenet import facenet
+from facenet.src import facenet
 from facenet.src.align import detect_face
 import random
 from time import sleep
