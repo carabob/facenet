@@ -34,6 +34,7 @@ import os
 import sys
 import math
 import pickle
+import facenet.src.facenet as fc
 from sklearn.svm import SVC
 
 def main(args):
@@ -45,28 +46,28 @@ def main(args):
             np.random.seed(seed=args.seed)
             
             if args.use_split_dataset:
-                dataset_tmp = facenet.get_dataset(args.data_dir)
+                dataset_tmp = fc.get_dataset(args.data_dir)
                 train_set, test_set = split_dataset(dataset_tmp, args.min_nrof_images_per_class, args.nrof_train_images_per_class)
                 if (args.mode=='TRAIN'):
                     dataset = train_set
                 elif (args.mode=='CLASSIFY'):
                     dataset = test_set
             else:
-                dataset = facenet.get_dataset(args.data_dir)
+                dataset = fc.get_dataset(args.data_dir)
 
             # Check that there are at least one training image per class
             for cls in dataset:
                 assert len(cls.image_paths)>0, 'There must be at least one image for each class in the dataset'            
 
                  
-            paths, labels = facenet.get_image_paths_and_labels(dataset)
+            paths, labels = fc.get_image_paths_and_labels(dataset)
             
             print('Number of classes: %d' % len(dataset))
             print('Number of images: %d' % len(paths))
             
             # Load the model
             print('Loading feature extraction model')
-            facenet.load_model(args.model)
+            fc.load_model(args.model)
             
             # Get input and output tensors
             images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
@@ -83,7 +84,7 @@ def main(args):
                 start_index = i*args.batch_size
                 end_index = min((i+1)*args.batch_size, nrof_images)
                 paths_batch = paths[start_index:end_index]
-                images = facenet.load_data(paths_batch, False, False, args.image_size)
+                images = fc.load_data(paths_batch, False, False, args.image_size)
                 feed_dict = { images_placeholder:images, phase_train_placeholder:False }
                 emb_array[start_index:end_index,:] = sess.run(embeddings, feed_dict=feed_dict)
             
@@ -130,8 +131,8 @@ def split_dataset(dataset, min_nrof_images_per_class, nrof_train_images_per_clas
         # Remove classes with less than min_nrof_images_per_class
         if len(paths)>=min_nrof_images_per_class:
             np.random.shuffle(paths)
-            train_set.append(facenet.ImageClass(cls.name, paths[:nrof_train_images_per_class]))
-            test_set.append(facenet.ImageClass(cls.name, paths[nrof_train_images_per_class:]))
+            train_set.append(fc.ImageClass(cls.name, paths[:nrof_train_images_per_class]))
+            test_set.append(fc.ImageClass(cls.name, paths[nrof_train_images_per_class:]))
     return train_set, test_set
 
             
